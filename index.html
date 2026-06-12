@@ -4,212 +4,618 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>🌾 AgroHeróis - Missão Sustentável</title>
-    <link rel="stylesheet" href="css/estilo.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        body {
+            font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #c8e6c9;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: transparent;
+            border-radius: 48px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        header {
+            background: #2e7d32;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .logo-area h1 {
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+        .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .header-controls {
+            display: flex;
+            gap: 12px;
+        }
+        .icon-btn {
+            background: #ffb74d;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #2c3e2f;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .icon-btn:hover {
+            background: #ffa726;
+            transform: scale(1.05);
+        }
+        .fase {
+            display: none;
+            padding: 30px;
+            border-radius: 48px;
+            animation: fadeIn 0.4s ease;
+        }
+        .fase.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Cores exclusivas por fase */
+        [data-fase-cor="bg-fase0"] { background: linear-gradient(135deg, #FFF9C4, #FFF176); }
+        [data-fase-cor="bg-fase1"] { background: linear-gradient(135deg, #C8E6C9, #A5D6A7); }
+        [data-fase-cor="bg-fase2"] { background: linear-gradient(135deg, #B3E5FC, #81D4FA); }
+        [data-fase-cor="bg-fase3"] { background: linear-gradient(135deg, #FFECB3, #FFE082); }
+        [data-fase-cor="bg-conquista1"] { background: #2196f3; color: white; }
+        [data-fase-cor="bg-fase5"] { background: #D1C4E9; }
+        [data-fase-cor="bg-fase6"] { background: #FFCCBC; }
+        [data-fase-cor="bg-conquista2"] { background: #2c3e2f; color: #ffd966; }
+        [data-fase-cor="bg-fase8"] { background: #B2DFDB; }
+        [data-fase-cor="bg-fase9"] { background: #DCEDC8; }
+        [data-fase-cor="bg-conquista3"] { background: #2E7D32; color: white; }
+        [data-fase-cor="bg-fase11"] { background: #FFE0B2; }
+        [data-fase-cor="bg-certificado"] { background: #FFF9C4; }
+        
+        .personagem {
+            display: flex;
+            gap: 20px;
+            background: rgba(255,255,240,0.9);
+            border-radius: 40px;
+            padding: 20px;
+            margin-bottom: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+            backdrop-filter: blur(4px);
+        }
+        .avatar {
+            font-size: 4rem;
+            background: #c8e6c9;
+            border-radius: 100px;
+            padding: 10px;
+        }
+        .fala {
+            flex: 1;
+            font-size: 1.2rem;
+            background: white;
+            padding: 20px;
+            border-radius: 30px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+        .btn-primary, .btn-escolher, .btn-secundario {
+            background: #2e7d32;
+            color: white;
+            padding: 12px 28px;
+            border: none;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .btn-primary:hover, .btn-escolher:hover {
+            background: #1b5e20;
+            transform: scale(1.02);
+        }
+        .btn-secundario {
+            background: #ff9800;
+        }
+        .personagens-escolha {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .card-personagem {
+            background: #fff8e1;
+            border-radius: 30px;
+            padding: 20px;
+            text-align: center;
+            width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .avatar-grande {
+            font-size: 5rem;
+        }
+        .conquista-box {
+            text-align: center;
+            padding: 40px;
+            border-radius: 48px;
+        }
+        .conquista-card {
+            font-size: 2rem;
+            background: gold;
+            color: #2c3e2f;
+            display: inline-block;
+            padding: 20px 40px;
+            border-radius: 60px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .jogo-container { text-align: center; }
+        canvas {
+            background: #87CEEB;
+            display: block;
+            margin: 20px auto;
+            border: 3px solid #2e7d32;
+            max-width: 100%;
+            height: auto;
+            border-radius: 16px;
+        }
+        .pontuacao {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .compostagem-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        .materiais {
+            background: #f5f5dc;
+            padding: 20px;
+            border-radius: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            width: 280px;
+            min-height: 300px;
+        }
+        .item-material {
+            background: #ffcc80;
+            padding: 10px 15px;
+            border-radius: 40px;
+            cursor: grab;
+            font-weight: bold;
+            user-select: none;
+        }
+        .composteira {
+            background: #795548;
+            padding: 20px;
+            border-radius: 30px;
+            width: 320px;
+            min-height: 300px;
+            color: white;
+            text-align: center;
+        }
+        .drop-zone {
+            background: #5d4037;
+            padding: 15px;
+            border-radius: 20px;
+            margin: 10px 0;
+        }
+        .itens-coletados {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+        .feedback {
+            font-weight: bold;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 20px;
+        }
+        .plantio-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .mudas, .canteiros {
+            background: #dcedc8;
+            padding: 20px;
+            border-radius: 30px;
+            flex: 1;
+            min-width: 200px;
+        }
+        .muda {
+            background: #a5d6a7;
+            margin: 12px;
+            padding: 12px;
+            border-radius: 30px;
+            cursor: grab;
+            text-align: center;
+            font-weight: bold;
+        }
+        .canteiro {
+            background: #8d6e63;
+            color: white;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .planta-emoji { font-size: 1.5rem; }
+        .pergunta {
+            background: #f0f4c3;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 20px;
+        }
+        .certificado {
+            background: #fff9c4;
+            border: 8px double #ffb300;
+            padding: 40px;
+            text-align: center;
+            border-radius: 30px;
+        }
+        footer {
+            background: #1b5e20;
+            color: white;
+            text-align: center;
+            padding: 15px;
+        }
+        @media (max-width: 700px) {
+            .fase { padding: 15px; }
+            .personagem { flex-direction: column; text-align: center; }
+            .conquista-card { font-size: 1.2rem; padding: 10px 20px; }
+            .compostagem-area { flex-direction: column; align-items: center; }
+        }
+        .dark-mode .fase { filter: brightness(0.9); }
+        .dark-mode .fala, .dark-mode .card-personagem, .dark-mode .materiais, .dark-mode .mudas, .dark-mode .canteiros, .dark-mode .pergunta {
+            background: #2c2c2c; color: #f5f5f5;
+        }
+    </style>
 </head>
 <body>
 <div class="app-container" id="appContainer">
     <header>
-        <div class="logo-area">
-            <h1>🌾 AgroHeróis</h1>
-            <span class="subtitle">A Missão Sustentável</span>
-        </div>
+        <div class="logo-area"><h1>🌾 AgroHeróis</h1><span class="subtitle">A Missão Sustentável</span></div>
         <div class="header-controls">
-            <button id="darkModeToggle" class="icon-btn" aria-label="Modo escuro">🌙</button>
-            <button id="fontIncreaseBtn" class="icon-btn" aria-label="Aumentar fonte">A+</button>
-            <button id="fontDecreaseBtn" class="icon-btn" aria-label="Diminuir fonte">A-</button>
+            <button id="darkModeToggle" class="icon-btn">🌙</button>
+            <button id="fontIncreaseBtn" class="icon-btn">A+</button>
+            <button id="fontDecreaseBtn" class="icon-btn">A-</button>
         </div>
     </header>
-
     <main id="gameMain">
-        <!-- FASE 0 - Boas-vindas e nome -->
+        <!-- FASE 0 -->
         <section id="fase0" class="fase active" data-fase-cor="bg-fase0">
-            <div class="personagem">
-                <div class="avatar">🧑‍🌾</div>
-                <div class="fala">
-                    <p>Olá! Eu sou Felipe, e vou te guiar na missão <strong>Agro Forte, Futuro Sustentável</strong>. Para começar, qual é o seu nome?</p>
-                </div>
-            </div>
-            <div class="input-area">
-                <input type="text" id="nomeJogador" placeholder="Digite seu nome" maxlength="30">
-                <button id="confirmarNome" class="btn-primary">Começar aventura</button>
-            </div>
+            <div class="personagem"><div class="avatar">🧑‍🌾</div><div class="fala"><p>Olá! Eu sou Felipe, missão <strong>Agro Forte, Futuro Sustentável</strong>. Qual seu nome?</p></div></div>
+            <div class="input-area"><input type="text" id="nomeJogador" placeholder="Digite seu nome"><button id="confirmarNome" class="btn-primary">Começar</button></div>
         </section>
-
-        <!-- FASE 1 - Escolha do avatar -->
+        <!-- FASE 1 -->
         <section id="fase1" class="fase" data-fase-cor="bg-fase1">
-            <div class="personagem">
-                <div class="avatar">🧑‍🌾</div>
-                <div class="fala">
-                    <p>Que bom te conhecer, <span class="nome-destaque"></span>! Agora escolha seu avatar para essa jornada sustentável.</p>
-                </div>
-            </div>
+            <div class="personagem"><div class="avatar">🧑‍🌾</div><div class="fala"><p>Que bom te conhecer, <span class="nome-destaque"></span>! Escolha seu avatar.</p></div></div>
             <div class="personagens-escolha">
-                <div class="card-personagem" data-personagem="menino">
-                    <div class="avatar-grande">👦</div>
-                    <h3>Herói Lucas</h3>
-                    <button class="btn-escolher">Escolher</button>
-                </div>
-                <div class="card-personagem" data-personagem="menina">
-                    <div class="avatar-grande">👧</div>
-                    <h3>Heroína Sofia</h3>
-                    <button class="btn-escolher">Escolher</button>
-                </div>
+                <div class="card-personagem" data-personagem="menino"><div class="avatar-grande">👦</div><h3>Herói Lucas</h3><button class="btn-escolher">Escolher</button></div>
+                <div class="card-personagem" data-personagem="menina"><div class="avatar-grande">👧</div><h3>Heroína Sofia</h3><button class="btn-escolher">Escolher</button></div>
             </div>
         </section>
-
-        <!-- FASE 2 - Explicação polinizadores -->
+        <!-- FASE 2 -->
         <section id="fase2" class="fase" data-fase-cor="bg-fase2">
-            <div class="personagem">
-                <div class="avatar">🧑‍🌾</div>
-                <div class="fala">
-                    <p><span class="nome-destaque"></span>, você sabia que os polinizadores, como as abelhas, são essenciais? Vamos ajudá-las a escapar do fogo e da fumaça enquanto coletam 10 flores!</p>
-                    <p>Use as setas ↑ (cima) e ↓ (baixo) para desviar. Fogo embaixo, fumaça em cima.</p>
-                    <button id="iniciarJogoAbelha" class="btn-primary">Iniciar Missão Abelha</button>
-                </div>
-            </div>
+            <div class="personagem"><div class="avatar">🧑‍🌾</div><div class="fala"><p><span class="nome-destaque"></span>, vamos proteger os polinizadores! Use setas ↑↓, desvie do fogo e fumaça, pegue 10 flores.</p><button id="iniciarJogoAbelha" class="btn-primary">Iniciar Missão Abelha</button></div></div>
         </section>
-
-        <!-- FASE 3 - Jogo da Abelha (Canvas) -->
+        <!-- FASE 3 -->
         <section id="fase3" class="fase" data-fase-cor="bg-fase3">
-            <div class="jogo-container">
-                <h2>🐝 Resgate das Abelhas 🌸</h2>
-                <div class="pontuacao">Flores coletadas: <span id="floresColetadas">0</span> / 10</div>
-                <canvas id="gameCanvas" width="800" height="400"></canvas>
-                <div class="controles-aviso">⬆️ ⬇️ Movimentar abelha</div>
-                <button id="reiniciarAbelha" class="btn-secundario">Reiniciar fase</button>
-            </div>
+            <div class="jogo-container"><h2>🐝 Resgate das Abelhas 🌸</h2><div class="pontuacao">Flores: <span id="floresColetadas">0</span>/10</div><canvas id="gameCanvas" width="800" height="400"></canvas><div class="controles-aviso">⬆️ ⬇️</div><button id="reiniciarAbelha" class="btn-secundario">Reiniciar</button></div>
         </section>
-
-        <!-- FASE 4 - Conquista Guardião das Abelhas -->
-        <section id="fase4" class="fase" data-fase-cor="bg-conquista1">
-            <div class="conquista-box">
-                <p id="msgParabensAbelha"></p>
-                <div class="conquista-card">🏅 Guardião das Abelhas</div>
-                <button id="proxCompostagem" class="btn-primary">Continuar ➡️</button>
-            </div>
-        </section>
-
-        <!-- FASE 5 - Explicação Compostagem -->
-        <section id="fase5" class="fase" data-fase-cor="bg-fase5">
-            <div class="personagem">
-                <div class="avatar">🧑‍🌾</div>
-                <div class="fala">
-                    <p id="falaCompostagem"></p>
-                    <button id="iniciarCompostagem" class="btn-primary">Iniciar separação</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- FASE 6 - Jogo Compostagem Drag & Drop -->
-        <section id="fase6" class="fase" data-fase-cor="bg-fase6">
-            <h2>♻️ Compostagem Sustentável</h2>
-            <div class="compostagem-area">
-                <div class="materiais" id="materiaisLista"></div>
-                <div class="composteira" id="composteiraDrop">
-                    🧺 Composteira
-                    <div class="drop-zone">Arraste para cá</div>
-                    <div class="itens-coletados" id="itensComposteira"></div>
-                </div>
-            </div>
-            <div class="pontuacao-compostagem">Pontuação: <span id="pontosCompostagem">0</span></div>
-            <div id="feedbackCompostagem" class="feedback"></div>
-            <button id="finalizarCompostagem" class="btn-primary" disabled>Concluir</button>
-        </section>
-
-        <!-- FASE 7 - Conquista Mestre da Compostagem -->
-        <section id="fase7" class="fase" data-fase-cor="bg-conquista2">
-            <div class="conquista-box">
-                <p id="msgMestreCompost"></p>
-                <div class="conquista-card">🏅 Mestre da Compostagem</div>
-                <button id="proxPlantio" class="btn-primary">🌱 Próximo</button>
-            </div>
-        </section>
-
-        <!-- FASE 8 - Explicação Plantio -->
-        <section id="fase8" class="fase" data-fase-cor="bg-fase8">
-            <div class="personagem">
-                <div class="avatar">🧑‍🌾</div>
-                <div class="fala">
-                    <p id="falaPlantio"></p>
-                    <button id="iniciarPlantio" class="btn-primary">Começar plantar</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- FASE 9 - Minigame Plantio (Arrastar + Regar) -->
-        <section id="fase9" class="fase" data-fase-cor="bg-fase9">
-            <h2>🌿 Cuidando do Campo</h2>
-            <div class="plantio-area">
-                <div class="mudas">
-                    <div class="muda" data-tipo="tomate" draggable="true">🍅 Muda de Tomate</div>
-                    <div class="muda" data-tipo="alface" draggable="true">🥬 Muda de Alface</div>
-                    <div class="muda" data-tipo="milho" draggable="true">🌽 Muda de Milho</div>
-                </div>
-                <div class="canteiros">
-                    <div class="canteiro" data-cultura="tomate">Canteiro 1 (Tomate) <span class="planta-emoji">⬜</span></div>
-                    <div class="canteiro" data-cultura="alface">Canteiro 2 (Alface) <span class="planta-emoji">⬜</span></div>
-                    <div class="canteiro" data-cultura="milho">Canteiro 3 (Milho) <span class="planta-emoji">⬜</span></div>
-                </div>
-            </div>
-            <button id="regarPlantas" class="btn-primary">💧 Regar Plantas</button>
-            <div id="feedbackPlantio" class="feedback"></div>
-            <button id="finalizarPlantio" class="btn-primary" disabled>Ver Resultado</button>
-        </section>
-
-        <!-- FASE 10 - Conquista Agricultor Sustentável -->
-        <section id="fase10" class="fase" data-fase-cor="bg-conquista3">
-            <div class="conquista-box">
-                <p id="msgAgricultor"></p>
-                <div class="conquista-card">🏅 Agricultor Sustentável</div>
-                <button id="proxQuiz" class="btn-primary">📋 Quiz Final</button>
-            </div>
-        </section>
-
-        <!-- FASE 11 - Quiz -->
-        <section id="fase11" class="fase" data-fase-cor="bg-fase11">
-            <h2>📚 Quiz do Conhecimento</h2>
-            <div class="pergunta">
-                <p>1. Qual é a função das abelhas?</p>
-                <label><input type="radio" name="q1" value="a"> a) Produzir plástico</label>
-                <label><input type="radio" name="q1" value="b"> b) Polinizar plantas ✅</label>
-                <label><input type="radio" name="q1" value="c"> c) Produzir fumaça</label>
-            </div>
-            <div class="pergunta">
-                <p>2. O que pode ir para a composteira?</p>
-                <label><input type="radio" name="q2" value="a"> a) Pilha</label>
-                <label><input type="radio" name="q2" value="b"> b) Plástico</label>
-                <label><input type="radio" name="q2" value="c"> c) Casca de banana ✅</label>
-            </div>
-            <div class="pergunta">
-                <p>3. O que ajuda uma agricultura sustentável?</p>
-                <label><input type="radio" name="q3" value="a"> a) Queimadas</label>
-                <label><input type="radio" name="q3" value="b"> b) Desmatamento</label>
-                <label><input type="radio" name="q3" value="c"> c) Compostagem e preservação ✅</label>
-            </div>
-            <button id="verificarQuiz" class="btn-primary">Corrigir Quiz</button>
-            <div id="feedbackQuiz" class="feedback"></div>
-            <button id="proxCertificado" class="btn-primary" style="display:none;">Gerar Certificado 🎓</button>
-        </section>
-
-        <!-- FASE 12 - Certificado Final -->
-        <section id="fase12" class="fase" data-fase-cor="bg-certificado">
-            <div class="certificado">
-                <h2>🌾 CERTIFICADO DE AGROHERÓI 🌾</h2>
-                <p>Certificamos que <strong id="certNome"></strong></p>
-                <p>concluiu com sucesso a missão educativa</p>
-                <p><strong>AGROHERÓIS: A MISSÃO SUSTENTÁVEL</strong></p>
-                <p>Data: <span id="dataCertificado"></span></p>
-                <div class="conquista-card">🏆 Herói do Agro Sustentável</div>
-                <button id="reiniciarJogo" class="btn-primary">♻️ Jogar Novamente</button>
-            </div>
-        </section>
+        <!-- FASE 4 -->
+        <section id="fase4" class="fase" data-fase-cor="bg-conquista1"><div class="conquista-box"><p id="msgParabensAbelha"></p><div class="conquista-card">🏅 Guardião das Abelhas</div><button id="proxCompostagem" class="btn-primary">Continuar ➡️</button></div></section>
+        <!-- FASE 5 -->
+        <section id="fase5" class="fase" data-fase-cor="bg-fase5"><div class="personagem"><div class="avatar">🧑‍🌾</div><div class="fala"><p id="falaCompostagem"></p><button id="iniciarCompostagem" class="btn-primary">Iniciar separação</button></div></div></section>
+        <!-- FASE 6 -->
+        <section id="fase6" class="fase" data-fase-cor="bg-fase6"><h2>♻️ Compostagem</h2><div class="compostagem-area"><div class="materiais" id="materiaisLista"></div><div class="composteira" id="composteiraDrop">🧺 Composteira<div class="drop-zone">Arraste para cá</div><div class="itens-coletados" id="itensComposteira"></div></div></div><div class="pontuacao-compostagem">Pontuação: <span id="pontosCompostagem">0</span></div><div id="feedbackCompostagem" class="feedback"></div><button id="finalizarCompostagem" class="btn-primary" disabled>Concluir</button></section>
+        <!-- FASE 7 -->
+        <section id="fase7" class="fase" data-fase-cor="bg-conquista2"><div class="conquista-box"><p id="msgMestreCompost"></p><div class="conquista-card">🏅 Mestre da Compostagem</div><button id="proxPlantio" class="btn-primary">🌱 Próximo</button></div></section>
+        <!-- FASE 8 -->
+        <section id="fase8" class="fase" data-fase-cor="bg-fase8"><div class="personagem"><div class="avatar">🧑‍🌾</div><div class="fala"><p id="falaPlantio"></p><button id="iniciarPlantio" class="btn-primary">Começar plantar</button></div></div></section>
+        <!-- FASE 9 -->
+        <section id="fase9" class="fase" data-fase-cor="bg-fase9"><h2>🌿 Plantando o Futuro</h2><div class="plantio-area"><div class="mudas"><div class="muda" data-tipo="tomate" draggable="true">🍅 Muda Tomate</div><div class="muda" data-tipo="alface" draggable="true">🥬 Muda Alface</div><div class="muda" data-tipo="milho" draggable="true">🌽 Muda Milho</div></div><div class="canteiros"><div class="canteiro" data-cultura="tomate">Canteiro Tomate <span class="planta-emoji">⬜</span></div><div class="canteiro" data-cultura="alface">Canteiro Alface <span class="planta-emoji">⬜</span></div><div class="canteiro" data-cultura="milho">Canteiro Milho <span class="planta-emoji">⬜</span></div></div></div><button id="regarPlantas" class="btn-primary">💧 Regar</button><div id="feedbackPlantio" class="feedback"></div><button id="finalizarPlantio" class="btn-primary" disabled>Ver Resultado</button></section>
+        <!-- FASE 10 -->
+        <section id="fase10" class="fase" data-fase-cor="bg-conquista3"><div class="conquista-box"><p id="msgAgricultor"></p><div class="conquista-card">🏅 Agricultor Sustentável</div><button id="proxQuiz" class="btn-primary">📋 Quiz Final</button></div></section>
+        <!-- FASE 11 -->
+        <section id="fase11" class="fase" data-fase-cor="bg-fase11"><h2>📚 Quiz</h2><div class="pergunta"><p>1. Função das abelhas?</p><label><input type="radio" name="q1" value="a"> a) Plástico</label><label><input type="radio" name="q1" value="b"> b) Polinizar plantas ✅</label><label><input type="radio" name="q1" value="c"> c) Fumaça</label></div><div class="pergunta"><p>2. O que vai na composteira?</p><label><input type="radio" name="q2" value="a"> a) Pilha</label><label><input type="radio" name="q2" value="b"> b) Plástico</label><label><input type="radio" name="q2" value="c"> c) Casca de banana ✅</label></div><div class="pergunta"><p>3. Agricultura sustentável?</p><label><input type="radio" name="q3" value="a"> a) Queimadas</label><label><input type="radio" name="q3" value="b"> b) Desmatamento</label><label><input type="radio" name="q3" value="c"> c) Compostagem ✅</label></div><button id="verificarQuiz" class="btn-primary">Corrigir</button><div id="feedbackQuiz" class="feedback"></div><button id="proxCertificado" class="btn-primary" style="display:none;">Certificado 🎓</button></section>
+        <!-- FASE 12 -->
+        <section id="fase12" class="fase" data-fase-cor="bg-certificado"><div class="certificado"><h2>🌾 CERTIFICADO DE AGROHERÓI 🌾</h2><p>Certificamos que <strong id="certNome"></strong></p><p>concluiu a missão <strong>AGROHERÓIS: A MISSÃO SUSTENTÁVEL</strong></p><p>Data: <span id="dataCertificado"></span></p><div class="conquista-card">🏆 Herói do Agro Sustentável</div><button id="reiniciarJogo" class="btn-primary">♻️ Jogar Novamente</button></div></section>
     </main>
-    <footer>
-        <p>🌱 Agro Forte, Futuro Sustentável | Missão educativa</p>
-    </footer>
+    <footer><p>🌱 Agro Forte, Futuro Sustentável</p></footer>
 </div>
+<script>
+    // ==================== VARIÁVEIS GLOBAIS ====================
+    let nomeJogador = "";
+    let personagemEscolhido = "";
+    let floresColetadas = 0, jogoAtivo = false, animId = null;
+    let abelhaX = 80, abelhaY = 200, florX, florY, fogoY, fumaçaY;
+    let canvas, ctx;
+    let setaCima = false, setaBaixo = false;
+    let pontosComp = 0, itensProcessados = 0, acertosComp = 0, itensComp = [];
+    let mudasPlantadas = { tomate: false, alface: false, milho: false };
+    const materiais = [
+        { nome: "🍌 Casca banana", tipo: "org", val: 10 },
+        { nome: "🍎 Casca maçã", tipo: "org", val: 10 },
+        { nome: "🍂 Folhas secas", tipo: "org", val: 10 },
+        { nome: "🥬 Restos verduras", tipo: "org", val: 10 },
+        { nome: "🥫 Lata", tipo: "rej", val: -5 },
+        { nome: "🧴 Plástico", tipo: "rej", val: -5 },
+        { nome: "🔋 Pilha", tipo: "rej", val: -5 }
+    ];
 
-<script src="js/script.js"></script>
+    // ==================== UTILITÁRIOS ====================
+    function showFase(id) {
+        document.querySelectorAll(".fase").forEach(f => f.classList.remove("active"));
+        document.getElementById(id).classList.add("active");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // ==================== ACESSIBILIDADE ====================
+    let fontSize = 100;
+    document.getElementById("fontIncreaseBtn").onclick = () => { if (fontSize<130) { fontSize+=10; document.body.style.fontSize=fontSize+"%"; } };
+    document.getElementById("fontDecreaseBtn").onclick = () => { if (fontSize>70) { fontSize-=10; document.body.style.fontSize=fontSize+"%"; } };
+    const container = document.getElementById("appContainer");
+    document.getElementById("darkModeToggle").onclick = () => {
+        container.classList.toggle("dark-mode");
+        document.getElementById("darkModeToggle").textContent = container.classList.contains("dark-mode") ? "☀️" : "🌙";
+    };
+
+    // ==================== FASE 0 e 1 ====================
+    document.getElementById("confirmarNome").onclick = () => {
+        const input = document.getElementById("nomeJogador");
+        if (!input.value.trim()) { alert("Digite seu nome!"); return; }
+        nomeJogador = input.value.trim();
+        document.querySelectorAll(".nome-destaque").forEach(el => el.textContent = nomeJogador);
+        showFase("fase1");
+    };
+    document.querySelectorAll(".btn-escolher").forEach(btn => {
+        btn.onclick = (e) => {
+            const card = btn.closest(".card-personagem");
+            personagemEscolhido = card.dataset.personagem === "menino" ? "👦 Lucas" : "👧 Sofia";
+            const p = document.querySelector("#fase2 .fala p:first-child");
+            if(p) p.innerHTML = `${nomeJogador}, você escolheu ${personagemEscolhido}! Vamos proteger as abelhas. Use setas ↑↓.`;
+            showFase("fase2");
+        };
+    });
+
+    // ==================== JOGO DA ABELHA (CANVAS) ====================
+    function iniciarAbelha() {
+        if (animId) cancelAnimationFrame(animId);
+        canvas = document.getElementById("gameCanvas");
+        ctx = canvas.getContext("2d");
+        floresColetadas = 0;
+        document.getElementById("floresColetadas").innerText = floresColetadas;
+        abelhaX = 80;
+        abelhaY = canvas.height/2;
+        fogoY = canvas.height-30;
+        fumaçaY = 30;
+        jogoAtivo = true;
+
+        function reposFlor() { florX = 30+Math.random()*(canvas.width-60); florY = 30+Math.random()*(canvas.height-60); }
+        reposFlor();
+
+        function desenhar() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle="#87CEEB"; ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle="#ff5722"; ctx.fillRect(0,fogoY,canvas.width,30);
+            ctx.fillStyle="#b0bec5"; ctx.fillRect(0,fumaçaY-20,canvas.width,35);
+            ctx.fillStyle="#ffd54f"; ctx.beginPath(); ctx.arc(florX,florY,12,0,2*Math.PI); ctx.fill();
+            ctx.fillStyle="#fbc02d"; ctx.beginPath(); ctx.ellipse(abelhaX,abelhaY,12,9,0,0,2*Math.PI); ctx.fill();
+            ctx.fillStyle="black"; ctx.fillRect(abelhaX+8,abelhaY-3,8,3);
+        }
+
+        function atualizar() {
+            if (!jogoAtivo) return;
+            if (setaCima && abelhaY>25) abelhaY -= 5;
+            if (setaBaixo && abelhaY<canvas.height-35) abelhaY += 5;
+            if ((abelhaY+15>fogoY) || (abelhaY-15<fumaçaY+10)) {
+                alert("💥 Colidiu com fogo/fumaça! Recomeçando...");
+                floresColetadas=0; document.getElementById("floresColetadas").innerText=0;
+                abelhaY=canvas.height/2; reposFlor();
+                desenhar(); requestAnimationFrame(atualizar);
+                return;
+            }
+            if (Math.hypot(abelhaX-florX, abelhaY-florY)<25) {
+                floresColetadas++;
+                document.getElementById("floresColetadas").innerText = floresColetadas;
+                if (floresColetadas >= 10) {
+                    jogoAtivo = false;
+                    window.removeEventListener("keydown", keydownH);
+                    window.removeEventListener("keyup", keyupH);
+                    cancelAnimationFrame(animId);
+                    document.getElementById("msgParabensAbelha").innerHTML = `Muito bem, ${nomeJogador}!<br>Você ajudou a proteger os polinizadores.<br>Graças às abelhas, muitas culturas agrícolas produzem alimentos.<br>Proteger polinizadores fortalece a cadeia alimentar.`;
+                    showFase("fase4");
+                    return;
+                }
+                reposFlor();
+            }
+            desenhar();
+            animId = requestAnimationFrame(atualizar);
+        }
+
+        function keydownH(e) { if(e.key==="ArrowUp"){ setaCima=true; e.preventDefault(); } if(e.key==="ArrowDown"){ setaBaixo=true; e.preventDefault(); } }
+        function keyupH(e) { if(e.key==="ArrowUp") setaCima=false; if(e.key==="ArrowDown") setaBaixo=false; }
+        window.removeEventListener("keydown", keydownH); window.removeEventListener("keyup", keyupH);
+        window.addEventListener("keydown", keydownH); window.addEventListener("keyup", keyupH);
+        desenhar();
+        atualizar();
+    }
+    document.getElementById("iniciarJogoAbelha").onclick = () => { showFase("fase3"); setTimeout(iniciarAbelha, 100); };
+    document.getElementById("reiniciarAbelha").onclick = () => { if(animId) cancelAnimationFrame(animId); iniciarAbelha(); };
+
+    // ==================== COMPOSTAGEM DRAG & DROP ====================
+    function carregarCompostagem() {
+        const divM = document.getElementById("materiaisLista");
+        divM.innerHTML = "";
+        pontosComp=0; itensProcessados=0; acertosComp=0;
+        document.getElementById("pontosCompostagem").innerText="0";
+        document.getElementById("itensComposteira").innerHTML="";
+        document.getElementById("finalizarCompostagem").disabled=true;
+        document.getElementById("feedbackCompostagem").innerHTML="";
+        itensComp = [...materiais];
+        itensComp.forEach((item, idx) => {
+            const el = document.createElement("div");
+            el.className = "item-material";
+            el.setAttribute("draggable","true");
+            el.setAttribute("data-idx", idx);
+            el.textContent = item.nome;
+            el.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", idx); e.target.style.opacity="0.5"; });
+            el.addEventListener("dragend", e => e.target.style.opacity="1");
+            divM.appendChild(el);
+        });
+        const comp = document.getElementById("composteiraDrop");
+        comp.ondragover = e => e.preventDefault();
+        comp.ondrop = e => {
+            e.preventDefault();
+            const idx = e.dataTransfer.getData("text/plain");
+            if (!idx || !itensComp[idx]) return;
+            const item = itensComp[idx];
+            pontosComp += item.val;
+            document.getElementById("pontosCompostagem").innerText = pontosComp;
+            if(item.val>0) acertosComp++;
+            itensProcessados++;
+            document.getElementById("itensComposteira").innerHTML += `<div>${item.nome} ${item.val>0?"✔️":"❌"}</div>`;
+            const dragged = document.querySelector(`.item-material[data-idx='${idx}']`);
+            if(dragged) dragged.remove();
+            itensComp[idx] = null;
+            if(itensProcessados === materiais.length){
+                document.getElementById("feedbackCompostagem").innerHTML = `✅ Finalizado! Acertos: ${acertosComp} de 4 orgânicos. Pontuação: ${pontosComp}`;
+                document.getElementById("finalizarCompostagem").disabled = false;
+            }
+        };
+    }
+    document.getElementById("proxCompostagem").onclick = () => {
+        showFase("fase5");
+        document.getElementById("falaCompostagem").innerHTML = `${nomeJogador}, agora vamos aprender sobre compostagem.<br>Restos de frutas, verduras e folhas viram adubo.<br>Vamos separar corretamente.`;
+    };
+    document.getElementById("iniciarCompostagem").onclick = () => { carregarCompostagem(); showFase("fase6"); };
+    document.getElementById("finalizarCompostagem").onclick = () => {
+        showFase("fase7");
+        document.getElementById("msgMestreCompost").innerHTML = `Excelente, ${nomeJogador}!<br>Você transformou resíduos em adubo.<br>Esse adubo ajuda as plantas a crescer saudáveis.`;
+    };
+
+    // ==================== PLANTIO ====================
+    document.getElementById("proxPlantio").onclick = () => {
+        showFase("fase8");
+        document.getElementById("falaPlantio").innerHTML = `${nomeJogador}, com abelhas e compostagem, agora vamos plantar!<br>Arraste mudas, regue e veja crescer.`;
+    };
+    let plantioReady = false;
+    function setupPlantio() {
+        if(plantioReady) return;
+        plantioReady = true;
+        const mudas = document.querySelectorAll(".muda");
+        mudas.forEach(m => {
+            m.addEventListener("dragstart", e => e.dataTransfer.setData("text/plain", m.dataset.tipo));
+        });
+        const canteiros = document.querySelectorAll(".canteiro");
+        canteiros.forEach(c => {
+            c.addEventListener("dragover", e => e.preventDefault());
+            c.addEventListener("drop", e => {
+                e.preventDefault();
+                const tipo = e.dataTransfer.getData("text/plain");
+                const cultura = e.target.closest(".canteiro").dataset.cultura;
+                if(tipo === cultura && !mudasPlantadas[tipo]){
+                    mudasPlantadas[tipo] = true;
+                    e.target.closest(".canteiro").querySelector(".planta-emoji").innerHTML = "🌱";
+                    document.getElementById("feedbackPlantio").innerHTML = `🌱 Muda de ${tipo} plantada!`;
+                } else document.getElementById("feedbackPlantio").innerHTML = "❌ Local errado ou já plantado!";
+                if(mudasPlantadas.tomate && mudasPlantadas.alface && mudasPlantadas.milho)
+                    document.getElementById("finalizarPlantio").disabled = false;
+            });
+        });
+        document.getElementById("finalizarPlantio").disabled = true;
+    }
+    document.getElementById("iniciarPlantio").onclick = () => {
+        setupPlantio();
+        mudasPlantadas = { tomate:false, alface:false, milho:false };
+        document.querySelectorAll(".planta-emoji").forEach(el => el.innerHTML = "⬜");
+        document.getElementById("finalizarPlantio").disabled = true;
+        document.getElementById("feedbackPlantio").innerHTML = "";
+        document.getElementById("regarPlantas").disabled = false;
+        showFase("fase9");
+    };
+    document.getElementById("regarPlantas").onclick = () => {
+        if(!mudasPlantadas.tomate || !mudasPlantadas.alface || !mudasPlantadas.milho){
+            alert("🌱 Plante todas as mudas primeiro!");
+            return;
+        }
+        let etapa = 0;
+        const interval = setInterval(() => {
+            if(etapa === 0){
+                document.querySelectorAll(".planta-emoji").forEach(p => p.innerHTML = "🌱");
+                etapa++;
+            } else if(etapa === 1){
+                document.querySelectorAll(".planta-emoji").forEach(p => p.innerHTML = "🌿");
+                etapa++;
+            } else if(etapa === 2){
+                document.querySelector(".canteiro[data-cultura='tomate'] .planta-emoji").innerHTML = "🍅";
+                document.querySelector(".canteiro[data-cultura='alface'] .planta-emoji").innerHTML = "🥬";
+                document.querySelector(".canteiro[data-cultura='milho'] .planta-emoji").innerHTML = "🌽";
+                etapa++;
+            } else {
+                clearInterval(interval);
+                document.getElementById("feedbackPlantio").innerHTML = "🌻 Colheita realizada! Missão concluída.";
+                document.getElementById("finalizarPlantio").disabled = false;
+                document.getElementById("regarPlantas").disabled = true;
+            }
+        }, 700);
+    };
+    document.getElementById("finalizarPlantio").onclick = () => {
+        showFase("fase10");
+        document.getElementById("msgAgricultor").innerHTML = `Parabéns, ${nomeJogador}!<br>Você protegeu polinizadores, fez adubo e cultivou alimentos.<br>Esse é o caminho para um Agro Forte e Futuro Sustentável.`;
+    };
+
+    // ==================== QUIZ FINAL ====================
+    document.getElementById("proxQuiz").onclick = () => showFase("fase11");
+    document.getElementById("verificarQuiz").onclick = () => {
+        const q1 = document.querySelector('input[name="q1"]:checked');
+        const q2 = document.querySelector('input[name="q2"]:checked');
+        const q3 = document.querySelector('input[name="q3"]:checked');
+        let acertos=0;
+        if(q1 && q1.value==="b") acertos++;
+        if(q2 && q2.value==="c") acertos++;
+        if(q3 && q3.value==="c") acertos++;
+        const fb = document.getElementById("feedbackQuiz");
+        if(acertos===3){
+            fb.innerHTML = "✅ Excelente! Você aprendeu os principais conceitos do Agro Forte.";
+            document.getElementById("proxCertificado").style.display = "inline-block";
+        } else {
+            fb.innerHTML = `⚠️ Você acertou ${acertos} de 3. Tente novamente!`;
+            document.getElementById("proxCertificado").style.display = "none";
+        }
+    };
+    document.getElementById("proxCertificado").onclick = () => {
+        document.getElementById("certNome").innerText = nomeJogador;
+        document.getElementById("dataCertificado").innerText = new Date().toLocaleDateString("pt-BR");
+        showFase("fase12");
+    };
+    document.getElementById("reiniciarJogo").onclick = () => location.reload();
+</script>
 </body>
 </html>
