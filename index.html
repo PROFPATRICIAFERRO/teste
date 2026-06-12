@@ -75,7 +75,6 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        /* Cores exclusivas por fase */
         [data-fase-cor="bg-fase0"] { background: linear-gradient(135deg, #FFF9C4, #FFF176); }
         [data-fase-cor="bg-fase1"] { background: linear-gradient(135deg, #C8E6C9, #A5D6A7); }
         [data-fase-cor="bg-fase2"] { background: linear-gradient(135deg, #B3E5FC, #81D4FA); }
@@ -89,7 +88,6 @@
         [data-fase-cor="bg-conquista3"] { background: #2E7D32; color: white; }
         [data-fase-cor="bg-fase11"] { background: #FFE0B2; }
         [data-fase-cor="bg-certificado"] { background: #FFF9C4; }
-        
         .personagem {
             display: flex;
             gap: 20px;
@@ -174,6 +172,7 @@
             max-width: 100%;
             height: auto;
             border-radius: 16px;
+            cursor: none;
         }
         .pontuacao {
             font-size: 1.5rem;
@@ -322,11 +321,11 @@
         </section>
         <!-- FASE 2 -->
         <section id="fase2" class="fase" data-fase-cor="bg-fase2">
-            <div class="personagem"><div class="avatar">🧑‍🌾</div><div class="fala"><p><span class="nome-destaque"></span>, vamos proteger os polinizadores! Use setas ↑↓, desvie do fogo e fumaça, pegue 10 flores.</p><button id="iniciarJogoAbelha" class="btn-primary">Iniciar Missão Abelha</button></div></div>
+            <div class="personagem"><div class="avatar">🧑‍🌾</div><div class="fala"><p><span class="nome-destaque"></span>, vamos proteger os polinizadores! Use setas ↑↓, desvie do fogo (🔥) e fumaça (💨), colete 10 girassóis (🌻).</p><button id="iniciarJogoAbelha" class="btn-primary">Iniciar Missão Abelha</button></div></div>
         </section>
         <!-- FASE 3 -->
         <section id="fase3" class="fase" data-fase-cor="bg-fase3">
-            <div class="jogo-container"><h2>🐝 Resgate das Abelhas 🌸</h2><div class="pontuacao">Flores: <span id="floresColetadas">0</span>/10</div><canvas id="gameCanvas" width="800" height="400"></canvas><div class="controles-aviso">⬆️ ⬇️</div><button id="reiniciarAbelha" class="btn-secundario">Reiniciar</button></div>
+            <div class="jogo-container"><h2>🐝 Resgate das Abelhas 🌻</h2><div class="pontuacao">Girassóis: <span id="floresColetadas">0</span>/10</div><canvas id="gameCanvas" width="800" height="400"></canvas><div class="controles-aviso">⬆️ ⬇️ movem a abelha | Evite 🔥 e 💨</div><button id="reiniciarAbelha" class="btn-secundario">Reiniciar fase</button></div>
         </section>
         <!-- FASE 4 -->
         <section id="fase4" class="fase" data-fase-cor="bg-conquista1"><div class="conquista-box"><p id="msgParabensAbelha"></p><div class="conquista-card">🏅 Guardião das Abelhas</div><button id="proxCompostagem" class="btn-primary">Continuar ➡️</button></div></section>
@@ -354,28 +353,28 @@
     let nomeJogador = "";
     let personagemEscolhido = "";
     let floresColetadas = 0, jogoAtivo = false, animId = null;
-    let abelhaX = 80, abelhaY = 200, florX, florY, fogoY, fumaçaY;
+    let abelhaX = 400, abelhaY = 200;  // posição inicial no centro
+    let sunflowers = [];      // array de {x, y}
+    let hazards = [];         // array de {x, y, tipo}  tipo: "fogo" ou "fumaca"
     let canvas, ctx;
     let setaCima = false, setaBaixo = false;
-    let pontosComp = 0, itensProcessados = 0, acertosComp = 0, itensComp = [];
-    let mudasPlantadas = { tomate: false, alface: false, milho: false };
-    const materiais = [
-        { nome: "🍌 Casca banana", tipo: "org", val: 10 },
-        { nome: "🍎 Casca maçã", tipo: "org", val: 10 },
-        { nome: "🍂 Folhas secas", tipo: "org", val: 10 },
-        { nome: "🥬 Restos verduras", tipo: "org", val: 10 },
-        { nome: "🥫 Lata", tipo: "rej", val: -5 },
-        { nome: "🧴 Plástico", tipo: "rej", val: -5 },
-        { nome: "🔋 Pilha", tipo: "rej", val: -5 }
-    ];
-
+    let frame = 0;            // para animação de movimento (buzz)
+    let totalFloresNecessarias = 10;
+    
+    // Dimensões do canvas fixas
+    const CANVAS_W = 800;
+    const CANVAS_H = 400;
+    const BEE_SIZE = 42;      // tamanho aproximado da abelha (px)
+    const FLOWER_SIZE = 48;   // tamanho do girassol
+    const HAZARD_SIZE = 36;   // tamanho dos emojis de perigo
+    
     // ==================== UTILITÁRIOS ====================
     function showFase(id) {
         document.querySelectorAll(".fase").forEach(f => f.classList.remove("active"));
         document.getElementById(id).classList.add("active");
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
-
+    
     // ==================== ACESSIBILIDADE ====================
     let fontSize = 100;
     document.getElementById("fontIncreaseBtn").onclick = () => { if (fontSize<130) { fontSize+=10; document.body.style.fontSize=fontSize+"%"; } };
@@ -385,7 +384,7 @@
         container.classList.toggle("dark-mode");
         document.getElementById("darkModeToggle").textContent = container.classList.contains("dark-mode") ? "☀️" : "🌙";
     };
-
+    
     // ==================== FASE 0 e 1 ====================
     document.getElementById("confirmarNome").onclick = () => {
         const input = document.getElementById("nomeJogador");
@@ -403,73 +402,226 @@
             showFase("fase2");
         };
     });
-
-    // ==================== JOGO DA ABELHA (CANVAS) ====================
+    
+    // ==================== JOGO DA ABELHA REFORMULADO ====================
+    function gerarHazards() {
+        const hazardsArray = [];
+        // Fogo na metade inferior (verde) - y entre 200 e 380
+        for (let i = 0; i < 14; i++) {
+            hazardsArray.push({
+                x: 30 + Math.random() * (CANVAS_W - 80),
+                y: 220 + Math.random() * 150,
+                tipo: "fogo"
+            });
+        }
+        // Fumaça na metade superior (azul) - y entre 20 e 180
+        for (let i = 0; i < 14; i++) {
+            hazardsArray.push({
+                x: 30 + Math.random() * (CANVAS_W - 80),
+                y: 30 + Math.random() * 140,
+                tipo: "fumaca"
+            });
+        }
+        return hazardsArray;
+    }
+    
+    function gerarSunflowers(count) {
+        const flores = [];
+        for (let i = 0; i < count; i++) {
+            flores.push({
+                x: 40 + Math.random() * (CANVAS_W - 80),
+                y: 40 + Math.random() * (CANVAS_H - 80)
+            });
+        }
+        return flores;
+    }
+    
+    function desenharCenario() {
+        // Metade superior azul (céu)
+        ctx.fillStyle = "#87CEEB";
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H/2);
+        // Metade inferior verde (grama)
+        ctx.fillStyle = "#7CB342";
+        ctx.fillRect(0, CANVAS_H/2, CANVAS_W, CANVAS_H/2);
+        // Linha divisória
+        ctx.beginPath();
+        ctx.strokeStyle = "#5D4037";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(0, CANVAS_H/2);
+        ctx.lineTo(CANVAS_W, CANVAS_H/2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+    
+    function desenharHazards() {
+        for (let h of hazards) {
+            if (h.tipo === "fogo") {
+                ctx.font = `${HAZARD_SIZE}px "Segoe UI Emoji"`;
+                ctx.fillStyle = "#000";
+                ctx.fillText("🔥", h.x, h.y);
+            } else {
+                ctx.font = `${HAZARD_SIZE}px "Segoe UI Emoji"`;
+                ctx.fillStyle = "#666";
+                ctx.fillText("💨", h.x, h.y);
+            }
+        }
+    }
+    
+    function desenharSunflowers() {
+        for (let f of sunflowers) {
+            ctx.font = `${FLOWER_SIZE}px "Segoe UI Emoji"`;
+            ctx.fillStyle = "#FFD700";
+            ctx.fillText("🌻", f.x, f.y);
+        }
+    }
+    
+    function desenharAbelha() {
+        // Efeito de vibração (buzz) para simular movimento
+        let offsetX = 0, offsetY = 0;
+        if (jogoAtivo && (frame % 4) < 2) {
+            offsetX = (Math.random() - 0.5) * 2;
+            offsetY = (Math.random() - 0.5) * 2;
+        }
+        ctx.font = `${BEE_SIZE}px "Segoe UI Emoji"`;
+        ctx.fillStyle = "#F5A623";
+        ctx.fillText("🐝", abelhaX + offsetX, abelhaY + offsetY);
+        // Pequenas asas batendo (desenho extra)
+        ctx.fillStyle = "#FFFFFF";
+        ctx.beginPath();
+        if ((frame % 8) < 4) {
+            ctx.ellipse(abelhaX - 12 + offsetX, abelhaY - 8 + offsetY, 6, 10, -0.5, 0, 2*Math.PI);
+            ctx.ellipse(abelhaX + 12 + offsetX, abelhaY - 8 + offsetY, 6, 10, 0.5, 0, 2*Math.PI);
+        } else {
+            ctx.ellipse(abelhaX - 10 + offsetX, abelhaY - 5 + offsetY, 5, 8, -0.3, 0, 2*Math.PI);
+            ctx.ellipse(abelhaX + 10 + offsetX, abelhaY - 5 + offsetY, 5, 8, 0.3, 0, 2*Math.PI);
+        }
+        ctx.fill();
+    }
+    
+    function verificarColisoes() {
+        // Colisão com perigos
+        for (let h of hazards) {
+            const dx = abelhaX - h.x;
+            const dy = abelhaY - h.y;
+            const distancia = Math.hypot(dx, dy);
+            if (distancia < (BEE_SIZE/2 + HAZARD_SIZE/2)) {
+                return "perigo";
+            }
+        }
+        // Colisão com girassóis
+        for (let i = 0; i < sunflowers.length; i++) {
+            const f = sunflowers[i];
+            const dx = abelhaX - f.x;
+            const dy = abelhaY - f.y;
+            const distancia = Math.hypot(dx, dy);
+            if (distancia < (BEE_SIZE/2 + FLOWER_SIZE/2)) {
+                return { tipo: "flor", indice: i };
+            }
+        }
+        return null;
+    }
+    
+    function atualizarJogo() {
+        if (!jogoAtivo) return;
+        
+        // Movimento da abelha
+        if (setaCima && abelhaY > 25) abelhaY -= 5;
+        if (setaBaixo && abelhaY < CANVAS_H - 25) abelhaY += 5;
+        
+        // Verificar colisões
+        const colisao = verificarColisoes();
+        if (colisao === "perigo") {
+            // Reset total
+            floresColetadas = 0;
+            document.getElementById("floresColetadas").innerText = floresColetadas;
+            abelhaX = CANVAS_W/2;
+            abelhaY = CANVAS_H/2;
+            sunflowers = gerarSunflowers(6);  // respawn de 6 flores
+            alert("💥 Você colidiu com fogo ou fumaça! Recomeçando a coleta...");
+            desenharTudo();
+            requestAnimationFrame(atualizarJogo);
+            return;
+        } else if (colisao && colisao.tipo === "flor") {
+            // Coletou uma flor
+            sunflowers.splice(colisao.indice, 1);
+            floresColetadas++;
+            document.getElementById("floresColetadas").innerText = floresColetadas;
+            if (floresColetadas >= totalFloresNecessarias) {
+                // Vitória!
+                jogoAtivo = false;
+                window.removeEventListener("keydown", keydownH);
+                window.removeEventListener("keyup", keyupH);
+                cancelAnimationFrame(animId);
+                document.getElementById("msgParabensAbelha").innerHTML = `Muito bem, ${nomeJogador}!<br>Você ajudou a proteger os polinizadores.<br>Graças às abelhas, muitas culturas agrícolas produzem alimentos.<br>Proteger polinizadores fortalece a cadeia alimentar.`;
+                showFase("fase4");
+                return;
+            }
+            // Adicionar uma nova flor para manter quantidade dinâmica (entre 4 e 7)
+            if (sunflowers.length < 7) {
+                sunflowers.push({
+                    x: 40 + Math.random() * (CANVAS_W - 80),
+                    y: 40 + Math.random() * (CANVAS_H - 80)
+                });
+            }
+        }
+        
+        frame++;
+        desenharTudo();
+        animId = requestAnimationFrame(atualizarJogo);
+    }
+    
+    function desenharTudo() {
+        desenharCenario();
+        desenharHazards();
+        desenharSunflowers();
+        desenharAbelha();
+    }
+    
     function iniciarAbelha() {
         if (animId) cancelAnimationFrame(animId);
         canvas = document.getElementById("gameCanvas");
         ctx = canvas.getContext("2d");
+        canvas.width = CANVAS_W;
+        canvas.height = CANVAS_H;
         floresColetadas = 0;
         document.getElementById("floresColetadas").innerText = floresColetadas;
-        abelhaX = 80;
-        abelhaY = canvas.height/2;
-        fogoY = canvas.height-30;
-        fumaçaY = 30;
+        abelhaX = CANVAS_W/2;
+        abelhaY = CANVAS_H/2;
         jogoAtivo = true;
-
-        function reposFlor() { florX = 30+Math.random()*(canvas.width-60); florY = 30+Math.random()*(canvas.height-60); }
-        reposFlor();
-
-        function desenhar() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle="#87CEEB"; ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle="#ff5722"; ctx.fillRect(0,fogoY,canvas.width,30);
-            ctx.fillStyle="#b0bec5"; ctx.fillRect(0,fumaçaY-20,canvas.width,35);
-            ctx.fillStyle="#ffd54f"; ctx.beginPath(); ctx.arc(florX,florY,12,0,2*Math.PI); ctx.fill();
-            ctx.fillStyle="#fbc02d"; ctx.beginPath(); ctx.ellipse(abelhaX,abelhaY,12,9,0,0,2*Math.PI); ctx.fill();
-            ctx.fillStyle="black"; ctx.fillRect(abelhaX+8,abelhaY-3,8,3);
-        }
-
-        function atualizar() {
-            if (!jogoAtivo) return;
-            if (setaCima && abelhaY>25) abelhaY -= 5;
-            if (setaBaixo && abelhaY<canvas.height-35) abelhaY += 5;
-            if ((abelhaY+15>fogoY) || (abelhaY-15<fumaçaY+10)) {
-                alert("💥 Colidiu com fogo/fumaça! Recomeçando...");
-                floresColetadas=0; document.getElementById("floresColetadas").innerText=0;
-                abelhaY=canvas.height/2; reposFlor();
-                desenhar(); requestAnimationFrame(atualizar);
-                return;
-            }
-            if (Math.hypot(abelhaX-florX, abelhaY-florY)<25) {
-                floresColetadas++;
-                document.getElementById("floresColetadas").innerText = floresColetadas;
-                if (floresColetadas >= 10) {
-                    jogoAtivo = false;
-                    window.removeEventListener("keydown", keydownH);
-                    window.removeEventListener("keyup", keyupH);
-                    cancelAnimationFrame(animId);
-                    document.getElementById("msgParabensAbelha").innerHTML = `Muito bem, ${nomeJogador}!<br>Você ajudou a proteger os polinizadores.<br>Graças às abelhas, muitas culturas agrícolas produzem alimentos.<br>Proteger polinizadores fortalece a cadeia alimentar.`;
-                    showFase("fase4");
-                    return;
-                }
-                reposFlor();
-            }
-            desenhar();
-            animId = requestAnimationFrame(atualizar);
-        }
-
+        frame = 0;
+        
+        // Gerar perigos fixos
+        hazards = gerarHazards();
+        // Gerar 6 girassóis iniciais
+        sunflowers = gerarSunflowers(6);
+        
         function keydownH(e) { if(e.key==="ArrowUp"){ setaCima=true; e.preventDefault(); } if(e.key==="ArrowDown"){ setaBaixo=true; e.preventDefault(); } }
         function keyupH(e) { if(e.key==="ArrowUp") setaCima=false; if(e.key==="ArrowDown") setaBaixo=false; }
-        window.removeEventListener("keydown", keydownH); window.removeEventListener("keyup", keyupH);
-        window.addEventListener("keydown", keydownH); window.addEventListener("keyup", keyupH);
-        desenhar();
-        atualizar();
+        window.removeEventListener("keydown", keydownH);
+        window.removeEventListener("keyup", keyupH);
+        window.addEventListener("keydown", keydownH);
+        window.addEventListener("keyup", keyupH);
+        
+        desenharTudo();
+        atualizarJogo();
     }
+    
     document.getElementById("iniciarJogoAbelha").onclick = () => { showFase("fase3"); setTimeout(iniciarAbelha, 100); };
     document.getElementById("reiniciarAbelha").onclick = () => { if(animId) cancelAnimationFrame(animId); iniciarAbelha(); };
-
-    // ==================== COMPOSTAGEM DRAG & DROP ====================
+    
+    // ==================== COMPOSTAGEM (mantido igual) ====================
+    let pontosComp = 0, itensProcessados = 0, acertosComp = 0, itensComp = [];
+    const materiais = [
+        { nome: "🍌 Casca banana", tipo: "org", val: 10 },
+        { nome: "🍎 Casca maçã", tipo: "org", val: 10 },
+        { nome: "🍂 Folhas secas", tipo: "org", val: 10 },
+        { nome: "🥬 Restos verduras", tipo: "org", val: 10 },
+        { nome: "🥫 Lata", tipo: "rej", val: -5 },
+        { nome: "🧴 Plástico", tipo: "rej", val: -5 },
+        { nome: "🔋 Pilha", tipo: "rej", val: -5 }
+    ];
+    
     function carregarCompostagem() {
         const divM = document.getElementById("materiaisLista");
         divM.innerHTML = "";
@@ -519,13 +671,14 @@
         showFase("fase7");
         document.getElementById("msgMestreCompost").innerHTML = `Excelente, ${nomeJogador}!<br>Você transformou resíduos em adubo.<br>Esse adubo ajuda as plantas a crescer saudáveis.`;
     };
-
-    // ==================== PLANTIO ====================
+    
+    // ==================== PLANTIO (mantido igual) ====================
     document.getElementById("proxPlantio").onclick = () => {
         showFase("fase8");
         document.getElementById("falaPlantio").innerHTML = `${nomeJogador}, com abelhas e compostagem, agora vamos plantar!<br>Arraste mudas, regue e veja crescer.`;
     };
     let plantioReady = false;
+    let mudasPlantadas = { tomate: false, alface: false, milho: false };
     function setupPlantio() {
         if(plantioReady) return;
         plantioReady = true;
@@ -590,7 +743,7 @@
         showFase("fase10");
         document.getElementById("msgAgricultor").innerHTML = `Parabéns, ${nomeJogador}!<br>Você protegeu polinizadores, fez adubo e cultivou alimentos.<br>Esse é o caminho para um Agro Forte e Futuro Sustentável.`;
     };
-
+    
     // ==================== QUIZ FINAL ====================
     document.getElementById("proxQuiz").onclick = () => showFase("fase11");
     document.getElementById("verificarQuiz").onclick = () => {
